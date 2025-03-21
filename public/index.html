@@ -1,69 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Stream Fullscreen</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> <!-- HLS Support -->
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: black; }
-        video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            display: block;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Stream Fullscreen</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: black; }
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+    }
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1rem 2rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body>
 
-<video id="videoPlayer" playsinline controls></video> <!-- Removed autoplay (added via JS) -->
+  <button id="startButton">Start Live Stream</button>
+  <video id="videoPlayer" playsinline controls></video>
 
-<script>
+  <script>
     const video = document.getElementById("videoPlayer");
-    const videoSrc = "https://customer-bqy92w40srfieu26.cloudflarestream.com/39c4e98a3ecf98a9c15f7b5b37b60fc3/manifest/video.m3u8"; // Your HLS URL
+    const startButton = document.getElementById("startButton");
+    const videoSrc = "https://customer-bqy92w40srfieu26.cloudflarestream.com/39c4e98a3ecf98a9c15f7b5b37b60fc3/manifest/video.m3u8";
 
     function playVideo() {
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(videoSrc);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                video.muted = false;
-                video.play().then(() => {
-                    console.log("Video is playing");
-                }).catch((error) => {
-                    console.warn("Autoplay blocked:", error);
-                });
-            });
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = videoSrc;
-            video.play().catch((error) => {
-                console.warn("Autoplay blocked:", error);
-            });
-        }
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.muted = false; // You can mute if autoplay fails
+          video.play().then(() => {
+            console.log("Video is playing");
+          }).catch((error) => {
+            console.warn("Autoplay blocked. Muting and retrying.", error);
+            video.muted = true;
+            video.play();
+          });
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = videoSrc;
+        video.play().catch((error) => {
+          console.warn("Autoplay blocked:", error);
+        });
+      }
     }
 
     function enterFullscreen() {
-        if (video.requestFullscreen) {
-            video.requestFullscreen();
-        } else if (video.mozRequestFullScreen) { // Firefox
-            video.mozRequestFullScreen();
-        } else if (video.webkitRequestFullscreen) { // Chrome, Safari, Opera
-            video.webkitRequestFullscreen();
-        } else if (video.msRequestFullscreen) { // IE/Edge
-            video.msRequestFullscreen();
-        }
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.mozRequestFullScreen) {
+        video.mozRequestFullScreen();
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
+      }
     }
 
-    window.onload = function () {
-        setTimeout(() => {
-            enterFullscreen(); // Force fullscreen
-            playVideo(); // Start the video with sound
-        }, 1000);
-    };
-</script>
+    startButton.addEventListener('click', () => {
+      startButton.style.display = 'none'; // Hide the button
+      enterFullscreen();
+      playVideo();
+    });
+
+
+    setTimeout(() => {
+  console.log("Auto-click triggered");
+  enterFullscreen(); // Will likely fail
+  playVideo();       // Will work if muted
+}, 5000);
+
+  </script>
 
 </body>
 </html>
