@@ -13,6 +13,10 @@
         body {
             overflow: hidden;
             background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
         .video-container {
             position: fixed;
@@ -20,55 +24,64 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: none; /* Hidden until user interaction */
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
+        .start-button {
+            position: absolute;
+            z-index: 10;
+            background: #ff0000;
+            color: white;
+            font-size: 20px;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
+<button class="start-button" id="startButton">▶ Tap to Start</button>
+
 <div class="video-container" id="videoContainer">
     <iframe 
         id="videoFrame"
-        src="https://customer-bqy92w40srfieu26.cloudflarestream.com/39c4e98a3ecf98a9c15f7b5b37b60fc3/iframe?autoplay=true&muted=false&loop=false&controls=false"
+        src="https://customer-bqy92w40srfieu26.cloudflarestream.com/39c4e98a3ecf98a9c15f7b5b37b60fc3/iframe?autoplay=true&muted=false"
         allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
         allowfullscreen
     ></iframe>
 </div>
 
 <script>
-    function enterFullscreen() {
-        const videoContainer = document.getElementById('videoContainer');
+    document.getElementById("startButton").addEventListener("click", function() {
+        const videoContainer = document.getElementById("videoContainer");
+        const iframe = document.getElementById("videoFrame");
 
+        // Show video container
+        videoContainer.style.display = "block";
+        
+        // Request Fullscreen
         if (videoContainer.requestFullscreen) {
             videoContainer.requestFullscreen();
         } else if (videoContainer.mozRequestFullScreen) { // Firefox
             videoContainer.mozRequestFullScreen();
-        } else if (videoContainer.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        } else if (videoContainer.webkitRequestFullscreen) { // Chrome, Safari, Opera
             videoContainer.webkitRequestFullscreen();
         } else if (videoContainer.msRequestFullscreen) { // IE/Edge
             videoContainer.msRequestFullscreen();
         }
-    }
 
-    // Ensure user interaction for autoplay & fullscreen
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            enterFullscreen();
-        }, 1000); // Delays fullscreen for better browser support
+        // Ensure the video plays with sound
+        iframe.contentWindow.postMessage({ event: "command", func: "playVideo" }, "*");
+
+        // Hide start button after interaction
+        this.style.display = "none";
     });
-
-    // Play live stream
-    window.onload = function () {
-        const iframe = document.getElementById("videoFrame").contentWindow;
-        iframe.postMessage({ event: "command", func: "playVideo" }, "*");
-    };
 </script>
 
 </body>
