@@ -14,7 +14,7 @@
       object-fit: cover;
       display: block;
     }
-    #startButton {
+    #startButton, #unmuteButton {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -24,16 +24,18 @@
       cursor: pointer;
       z-index: 10;
     }
+    #unmuteButton { display: none; }
   </style>
 </head>
 <body>
-
   <button id="startButton">Start Live Stream</button>
-  <video id="videoPlayer" playsinline controls></video>
+  <button id="unmuteButton">🔊 Unmute & Fullscreen</button>
+  <video id="videoPlayer" playsinline controls muted></video>
 
   <script>
     const video = document.getElementById("videoPlayer");
     const startButton = document.getElementById("startButton");
+    const unmuteButton = document.getElementById("unmuteButton");
     const videoSrc = "https://customer-bqy92w40srfieu26.cloudflarestream.com/39c4e98a3ecf98a9c15f7b5b37b60fc3/manifest/video.m3u8";
 
     function playVideo() {
@@ -42,48 +44,56 @@
         hls.loadSource(videoSrc);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.muted = false; // You can mute if autoplay fails
           video.play().then(() => {
             console.log("Video is playing");
           }).catch((error) => {
-            console.warn("Autoplay blocked. Muting and retrying.", error);
-            video.muted = true;
-            video.play();
+            console.warn("Autoplay blocked. Keeping muted.", error);
+            unmuteButton.style.display = "block"; // Show unmute button
           });
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = videoSrc;
         video.play().catch((error) => {
           console.warn("Autoplay blocked:", error);
+          unmuteButton.style.display = "block"; // Show unmute button
         });
       }
     }
 
     function enterFullscreen() {
-      if (video.requestFullscreen) {
-        video.requestFullscreen();
-      } else if (video.mozRequestFullScreen) {
-        video.mozRequestFullScreen();
-      } else if (video.webkitRequestFullscreen) {
-        video.webkitRequestFullscreen();
-      } else if (video.msRequestFullscreen) {
-        video.msRequestFullscreen();
-      }
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.mozRequestFullScreen) video.mozRequestFullScreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+      else if (video.msRequestFullscreen) video.msRequestFullscreen();
+    }
+
+    function unmuteVideo() {
+      video.muted = false;
+      video.volume = 1.0; // Max volume
+      video.play().then(() => {
+        console.log("Video is now unmuted");
+        unmuteButton.style.display = "none"; // Hide button after clicking
+      }).catch(err => console.error("Unmute play failed:", err));
     }
 
     startButton.addEventListener('click', () => {
-      startButton.style.display = 'none'; // Hide the button
+      startButton.style.display = 'none';
       enterFullscreen();
       playVideo();
     });
 
+    unmuteButton.addEventListener("click", unmuteVideo);
 
+    // Auto-start attempt after 5 seconds
     setTimeout(() => {
-  console.log("Auto-click triggered");
-  enterFullscreen(); // Will likely fail
-  playVideo();       // Will work if muted
-}, 5000);
-
+      console.log("Auto-play attempt");
+      playVideo();
+    }, 5000);
+     // Auto-start attempt after 5 seconds
+     setTimeout(() => {
+      console.log("Auto-play attempt");
+      unmuteVideo();
+    }, 10000);
   </script>
 
 </body>
